@@ -7,9 +7,10 @@
 // Data
 const account1 = {
   owner: 'Sai Sapura Chewae',
-  movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
+  movements: [200, 450, -400, 3000, -650, -130, 70000, 1300],
   interestRate: 1.2, // %
   pin: 1111,
+
   movementsDates: [
     '2021-11-18T21:31:17.178Z',
     '2021-12-23T07:42:02.383Z',
@@ -25,22 +26,23 @@ const account1 = {
 };
 
 const account2 = {
-  owner: 'Jason William',
-  movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
+  owner: 'Robert Lewandowski',
+  movements: [5000, 3400, -150, 12000, -3210, -500, 8500, 9000],
   interestRate: 1.5,
   pin: 2222,
+
   movementsDates: [
-    '2019-11-01T13:15:33.035Z',
-    '2019-11-30T09:48:16.867Z',
-    '2019-12-25T06:04:23.907Z',
-    '2020-01-25T14:18:46.235Z',
-    '2020-02-05T16:33:06.386Z',
-    '2020-04-10T14:43:26.374Z',
-    '2020-06-25T18:49:59.371Z',
-    '2020-07-26T12:01:20.894Z',
+    '2021-11-01T13:15:33.035Z',
+    '2021-11-30T09:48:16.867Z',
+    '2021-12-25T06:04:23.907Z',
+    '2021-01-25T14:18:46.235Z',
+    '2022-02-05T16:33:06.386Z',
+    '2022-04-10T14:43:26.374Z',
+    '2022-06-25T18:49:59.371Z',
+    '2022-07-26T12:01:20.894Z',
   ],
-  currency: 'EUR',
-  locale: 'pr-PT',
+  currency: 'PLN',
+  locale: 'pl-PL',
 };
 
 const account3 = {
@@ -48,6 +50,19 @@ const account3 = {
   movements: [200, -200, 340, -300, -20, 50, 400, -460],
   interestRate: 0.7,
   pin: 3333,
+
+  movementsDates: [
+    '2021-11-18T21:31:17.178Z',
+    '2021-12-23T07:42:02.383Z',
+    '2021-01-28T09:15:04.904Z',
+    '2022-04-01T10:17:24.185Z',
+    '2022-05-08T14:11:59.604Z',
+    '2022-05-27T17:01:17.194Z',
+    '2022-05-15T23:36:17.929Z',
+    '2022-05-16T10:51:36.790Z',
+  ], 
+  currency: 'RINGGIT', 
+  locale: 'ms-MY',
 };
 
 const account4 = {
@@ -55,9 +70,21 @@ const account4 = {
   movements: [430, 1000, 700, 50, 90],
   interestRate: 1,
   pin: 4444,
+
+  movementsDates: [
+    '2021-11-18T21:31:17.178Z',
+    '2021-12-23T07:42:02.383Z',
+    '2021-01-28T09:15:04.904Z',
+    '2022-04-01T10:17:24.185Z',
+    '2022-05-08T14:11:59.604Z',
+    '2022-05-27T17:01:17.194Z',
+    '2022-05-15T23:36:17.929Z',
+    '2022-05-16T10:51:36.790Z',
+  ], 
+  currency: 'BAHT', 
+  locale: 'th-TH',
+
 };
-
-
 
 
 const accounts = [account1, account2, account3, account4];
@@ -124,6 +151,7 @@ const displayMovements = function (acc, sort = false) {
     const date = new Date(acc.movementsDates[i]);
     const displayDate = formatMovementDate(date, acc.locale);
 
+    const formattedMov = formatCur(mov, acc.locale, acc.currency);
 
     const html = `
      <div class="movements__row">
@@ -139,11 +167,9 @@ const displayMovements = function (acc, sort = false) {
 
 const calcDisplayBalance = function (acc) {
   acc.balance = acc.movements.reduce((accumulator, mov) => accumulator + mov, 0);
-
-
-  labelBalance.textContent = `${acc.balance}$`;
-};
-
+  labelBalance.textContent = formatCur(acc.balance, acc.locale, acc.currency
+  );
+  };
 // DISPLAY INCOME, OUTCOME, INTEREST
 
 const calcDisplaySummary = function (acc) {
@@ -151,12 +177,12 @@ const calcDisplaySummary = function (acc) {
   const incomes = acc.movements
   .filter(mov => mov > 0)
   .reduce((accumulator, mov) => accumulator + mov, 0);
-  labelSumIn.textContent = `${incomes}€`
+  labelSumIn.textContent = formatCur(incomes, acc.locale, acc.currency);
   
   const outcomes = acc.movements
   .filter(mov => mov < 0)
   .reduce((accumulator, mov) => accumulator + mov, 0);
-  labelSumOut.textContent = `${Math.abs(outcomes)}€`; 
+  labelSumOut.textContent = formatCur (Math.abs(outcomes), acc.locale, acc.currency); 
 
   const interest = acc.movements.filter(mov => mov > 0)
   .map(deposit => (deposit * acc.interestRate) / 100)
@@ -165,7 +191,7 @@ const calcDisplaySummary = function (acc) {
     return int >=1; 
   })
   .reduce((accumulator, int) => accumulator + int, 0);
-  labelSumInterest.textContent = `${interest}€`;
+  labelSumInterest.textContent = formatCur(interest, acc.locale, acc.currency);
   
 };
 
@@ -192,10 +218,41 @@ const updateUI = function(acc) {
 
   // Display summary
   calcDisplaySummary(acc);
-}
+};
 
-// EVENT HANDLER
-let currentAccount;
+const startLogOutTimer = function () {
+
+  const tick = function () {
+    const min = String(Math.trunc (time / 60)).padStart(2, 0);
+    const sec = String(time % 60).padStart(2, 0);
+
+  // In each call, print the remaining time to UI
+  labelTimer.textContent = `${min}: ${sec}`;
+  
+  // When 0 seconds, stop timer andlog out user
+  if (time === 0) {
+    clearInterval(timer);
+    labelWelcome.textContent = 'Log in to get started';
+    containerApp.style.opacity = 0;
+  }
+
+    // Decrease 1s
+  time--;
+
+};
+  // Set time to 5 minutes
+
+  let time = 300;
+
+  // Call the timer every second
+  tick();
+  const timer = setInterval(tick, 1000);
+  return timer;
+
+};
+
+// EVENT HANDLERS
+let currentAccount, timer;
 
 btnLogin.addEventListener("click", function(e) {
   // Prevent form from submitting
@@ -238,9 +295,12 @@ console.log(labelDate.textContent);
   inputLoginUsername.value = inputLoginPin.value = '';
   inputLoginPin.blur();
 
+  // Timer
+  if (timer) clearInterval(timer);
+  timer = startLogOutTimer();
+
   // Update UI
   updateUI(currentAccount);
-
 }
 });
 
@@ -261,18 +321,21 @@ btnTransfer.addEventListener("click", function (e) {
 
 
     // Update UI
-  updateUI(currentAccount)
-  
+  updateUI(currentAccount);
+   
+  // Reset timer
+  clearInterval(timer);
+  timer = startLogOutTimer();
   }
 });
 
 btnLoan.addEventListener("click", function(e) {
   e.preventDefault();
 
-  const amount = +(inputLoanAmount.value);
+  const amount = Math.floor(inputLoanAmount.value);
 
   if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
-    // Add movement
+   setTimeout(function () {// Add movement
     currentAccount.movements.push(amount);
 
     // Add loan date
@@ -280,6 +343,13 @@ btnLoan.addEventListener("click", function(e) {
 
     // Update UI
     updateUI(currentAccount);
+
+    // Reset timer
+   clearInterval(timer);
+   timer = startLogOutTimer();
+
+  }, 2500);
+
   }
   inputLoanAmount.value = '';
 
